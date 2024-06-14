@@ -100,7 +100,7 @@ def get_litey_notes(id: str = None) -> List[dict]:
 
     return mongo_client.litey.notes.find_one({ "id": id }, { "_id": False })
 
-def get_ng_words():
+def get_ng_words() -> List[str]:
     cursor = mongo_client.litey.ngs.find({}, { "_id": False })
     return [ng["word"] for ng in list(cursor) if "word" in ng]
 
