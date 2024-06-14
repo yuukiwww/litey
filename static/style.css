@@ -1,0 +1,54 @@
+@font-face {
+  font-family: "Roboto";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(roboto/Roboto-Regular.ttf) format("truetype");
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+}
+
+body * {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  word-break: break-all;
+  white-space: pre-line;
+}
+
+body > :not(:last-child) {
+  margin-bottom: 2rem;
+}
+
+img, audio, video {
+  max-width: 100%;
+}
+
+code {
+  font-family: monospace;
+  background-color: #eee;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+#note {
+  all: revert;
+}
+
+#note:not(:last-child) {
+  margin-bottom: 2rem;
+}
+
+#note > :nth-child(1) {
+  font-size: 0.5rem;
+}
+
+#note > :nth-child(3) > * {
+  display: block;
+}
+
+#note > :nth-child(n+4):nth-child(-n+4) {
+  margin-right: 4px;
+}

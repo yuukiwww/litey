@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LiteY</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <h1>掲示板へようこそ！</h1>
+    <p>良識のあるメッセージを心がけてください</p>
+    <textarea placeholder="ここにメッセージを入力" rows="4" cols="50" id="message"></textarea>
+    <input type="submit" value="今すぐ送信！" onclick="notePost();">
+    {% for note in notes %}
+    <div id="note">
+      <div>{{ note.ip | ip_to_uid }}</div>
+      <div>{{ note.content | replace_ng_words(ng_words) }}</div>
+      <div id="attachments" data-linksets="{{ note.content | content_to_linksets | urlencode() }}"></div>
+      <code id="date" data-date="{{ note.date | urlencode() }}"></code>
+      <input type="submit" value="削除" onclick="noteDelete(this);" data-id="{{ note.id | urlencode() }}" data-preview="{{ note.content | urlencode() }}">
+    </div>
+    {% endfor %}
+  </body>
+</html>
