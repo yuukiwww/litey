@@ -177,7 +177,7 @@ async def api_ng_post(item: NGItem):
     return PlainTextResponse("OK")
 
 @app.post("/api/ng/delete")
-async def api_ng_post(item: NGItem):
+async def api_ng_delete(item: NGItem):
     mongo_client.litey.ngs.delete_one({
         "word": item.word
     })
