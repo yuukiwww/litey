@@ -53,6 +53,8 @@ mongo_client = MongoClient(
     password=environ.get("MONGO_PASSWORD")
 )
 
+#uuid重複する？考えすぎ？
+#mongo_client.litey.notes.create_index("id", unique=True)
 mongo_client.litey.ngs.create_index("word", unique=True)
 
 # スニペット
