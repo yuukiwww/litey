@@ -18,7 +18,9 @@
       <div>{{ note.content | replace_ng_words(ng_words) }}</div>
       <div id="attachments" data-linksets="{{ note.content | content_to_linksets | urlencode() }}"></div>
       <code id="date" data-date="{{ note.date | urlencode() }}"></code>
-      <input type="submit" value="削除" onclick="noteDelete(this);" data-id="{{ note.id | urlencode() }}" data-preview="{{ note.content | urlencode() }}">
+      {% if "/ninja" not in note.content %}
+        <input type="submit" value="削除" onclick="noteDelete(this);" data-id="{{ note.id | urlencode() }}" data-preview="{{ note.content | urlencode() }}">
+      {% endif %}
     </div>
     {% endfor %}
   </body>
