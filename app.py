@@ -1,5 +1,5 @@
 from typing import Callable, Awaitable, Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
 from os import environ
@@ -39,6 +39,10 @@ def content_to_linksets(content: str) -> str:
     groups = pattern.findall(content)
     return "\n".join(groups)
 
+def is_over_n_hours(src: datetime, hours: int) -> bool:
+    now = datetime.now().astimezone(timezone.utc)
+    return now - src >= timedelta(hours=hours)
+
 # 初期化
 
 templates = Jinja2Templates("templates")
@@ -46,6 +50,8 @@ templates = Jinja2Templates("templates")
 templates.env.filters["ip_to_uid"] = ip_to_uid
 templates.env.filters["replace_ng_words"] = replace_ng_words
 templates.env.filters["content_to_linksets"] = content_to_linksets
+templates.env.filters["fromisoformat"] = datetime.fromisoformat
+templates.env.filters["is_over_n_hours"] = is_over_n_hours
 
 mongo_client = MongoClient(
     environ.get("MONGO_URI", "mongodb://127.0.0.1:27017/"),

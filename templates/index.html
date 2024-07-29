@@ -18,7 +18,7 @@
       <div>{{ note.content | replace_ng_words(ng_words) }}</div>
       <div id="attachments" data-linksets="{{ note.content | content_to_linksets | urlencode() }}"></div>
       <code id="date" data-date="{{ note.date | urlencode() }}"></code>
-      {% if "/ninja" not in note.content %}
+      {% if not ("/ninja" in note.content and not note.date | fromisoformat | is_over_n_hours(72)) %}
         <input type="submit" value="削除" onclick="noteDelete(this);" data-id="{{ note.id | urlencode() }}" data-preview="{{ note.content | urlencode() }}">
       {% endif %}
     </div>
