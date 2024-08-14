@@ -40,8 +40,8 @@ def content_to_linksets(content: str) -> str:
     return "\n".join(groups)
 
 def is_over_n_hours(src: datetime, hours: int) -> bool:
-    now = datetime.now().astimezone(timezone.utc)
-    return now - src >= timedelta(hours=hours)
+    now = datetime.now()
+    return now - src.replace(tzinfo=None) > timedelta(hours=hours)
 
 # 初期化
 
