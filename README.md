@@ -9,7 +9,7 @@
 ```bash
 docker run --detach \
   --name litey-mongo-debug \
-  --volume lzitey-mongo-debug:/data/db \
+  --volume litey-mongo-debug:/data/db \
   --publish 27017:27017 \
   mongo
 ```
