@@ -6,6 +6,7 @@ from os import environ
 from urllib.parse import urlparse
 from base64 import b64encode
 from re import escape, compile, IGNORECASE
+from pprint import pprint
 
 from requests import get
 from fastapi import FastAPI, Request, Response, status
@@ -13,6 +14,7 @@ from fastapi.responses import JSONResponse, Response, PlainTextResponse, FileRes
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pymongo import MongoClient, DESCENDING
+from contextlib import asynccontextmanager
 
 # Jinja2
 
@@ -45,23 +47,33 @@ def is_over_n_hours(src: datetime, hours: int) -> bool:
 
 # 初期化
 
-templates = Jinja2Templates("templates")
+ctx = {}
 
-templates.env.filters["ip_to_uid"] = ip_to_uid
-templates.env.filters["replace_ng_words"] = replace_ng_words
-templates.env.filters["content_to_linksets"] = content_to_linksets
-templates.env.filters["fromisoformat"] = datetime.fromisoformat
-templates.env.filters["is_over_n_hours"] = is_over_n_hours
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ctx["templates"] = Jinja2Templates("templates")
 
-mongo_client = MongoClient(
-    environ.get("MONGO_URI", "mongodb://127.0.0.1:27017/"),
-    username=environ.get("MONGO_USER"),
-    password=environ.get("MONGO_PASSWORD")
-)
+    ctx["templates"].env.filters["ip_to_uid"] = ip_to_uid
+    ctx["templates"].env.filters["replace_ng_words"] = replace_ng_words
+    ctx["templates"].env.filters["content_to_linksets"] = content_to_linksets
+    ctx["templates"].env.filters["fromisoformat"] = datetime.fromisoformat
+    ctx["templates"].env.filters["is_over_n_hours"] = is_over_n_hours
 
-#uuid重複する？考えすぎ？
-#mongo_client.litey.notes.create_index("id", unique=True)
-mongo_client.litey.ngs.create_index("word", unique=True)
+    ctx["mongo_client"] = MongoClient(
+        environ.get("MONGO_URI", "mongodb://127.0.0.1:27017/"),
+        username=environ.get("MONGO_USER"),
+        password=environ.get("MONGO_PASSWORD")
+    )
+
+    #uuid重複する？考えすぎ？
+    ctx["mongo_client"].litey.notes.create_index("id", unique=True)
+    ctx["mongo_client"].litey.ngs.create_index("word", unique=True)
+
+    pprint(ctx)
+    yield
+    ctx["mongo_client"].close()
+
+    ctx.clear()
 
 # スニペット
 
@@ -103,18 +115,18 @@ def get_ip(req: Request) -> str:
 
 def get_litey_notes(id: str = None) -> List[dict]:
     if not id:
-        cursor = mongo_client.litey.notes.find({}, { "_id": False }).sort("date", DESCENDING)
+        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING)
         return list(cursor)
 
-    return mongo_client.litey.notes.find_one({ "id": id }, { "_id": False })
+    return ctx["mongo_client"].litey.notes.find_one({ "id": id }, { "_id": False })
 
 def get_ng_words() -> List[str]:
-    cursor = mongo_client.litey.ngs.find({}, { "_id": False })
+    cursor = ctx["mongo_client"].litey.ngs.find({}, { "_id": False })
     return [ng["word"] for ng in list(cursor) if "word" in ng]
 
 # FastAPI
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 @app.middleware("http")
 async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Response]]):
@@ -140,7 +152,7 @@ async def api_get(id: str = None):
 
 @app.post("/api/litey/post")
 async def api_post(item: LiteYItem, req: Request):
-    mongo_client.litey.notes.insert_one({
+    ctx["mongo_client"].litey.notes.insert_one({
         "id": str(uuid4()),
         "content": item.content,
         "date": datetime.now().astimezone(timezone.utc).isoformat(),
@@ -151,7 +163,9 @@ async def api_post(item: LiteYItem, req: Request):
 
 @app.post("/api/litey/delete")
 async def api_delete(item: LiteYDeleteItem):
-    mongo_client.litey.notes.delete_one({ "id": item.id })
+    ctx["mongo_client"].litey.notes.delete_one({
+        "id": item.id
+    })
 
     return PlainTextResponse("OK")
 
@@ -178,7 +192,7 @@ async def api_ng_get():
 
 @app.post("/api/ng/post")
 async def api_ng_post(item: NGItem):
-    mongo_client.litey.ngs.insert_one({
+    ctx["mongo_client"].litey.ngs.insert_one({
         "word": item.word
     })
 
@@ -186,7 +200,7 @@ async def api_ng_post(item: NGItem):
 
 @app.post("/api/ng/delete")
 async def api_ng_delete(item: NGItem):
-    mongo_client.litey.ngs.delete_one({
+    ctx["mongo_client"].litey.ngs.delete_one({
         "word": item.word
     })
 
@@ -194,7 +208,7 @@ async def api_ng_delete(item: NGItem):
 
 @app.get("/")
 async def home(req: Request):
-    res = templates.TemplateResponse(req, "index.html", {
+    res = ctx["templates"].TemplateResponse(req, "index.html", {
         "notes": get_litey_notes(),
         "ng_words": get_ng_words()
     })
