@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
     )
 
     #uuid重複する？考えすぎ？
-    ctx["mongo_client"].litey.notes.create_index("id", unique=True)
+    #ctx["mongo_client"].litey.notes.create_index("id", unique=True)
     ctx["mongo_client"].litey.ngs.create_index("word", unique=True)
 
     pprint(ctx)

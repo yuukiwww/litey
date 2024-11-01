@@ -4,7 +4,13 @@
 
 ## デバッグの開始
 
-データベースを起動します。
+依存関係をインストールします
+
+```bash
+pip install -r requirements.txt
+```
+
+データベースを起動します
 
 ```bash
 docker run --detach \
