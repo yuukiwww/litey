@@ -22,7 +22,7 @@ def ip_to_uid(ip: Optional[str]) -> str:
     if not ip:
         return "-"
 
-    return b64encode(ip.encode("utf-8")).decode("utf-8")[:11]
+    return b64encode(ip.encode("utf-8")).decode("utf-8")[-11:]
 
 def replace_ng_words(src: str, ng_words: List[str]) -> str:
     result = src
