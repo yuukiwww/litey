@@ -41,7 +41,10 @@ function noteDelete(submit) {
       if (res.ok) {
         alert("削除に成功しました！");
       } else {
-        alert("削除に失敗しました。");
+        (async () => {
+          const text = await res.text();
+          alert(`削除に失敗しました。\n${text}`);
+        })();
       }
     });
 }

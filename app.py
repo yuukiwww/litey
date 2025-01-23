@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from base64 import b64encode
 from re import escape, compile, IGNORECASE
 from pprint import pprint
+from random import randint
 
 from requests import get
 from fastapi import FastAPI, Request, Response, status
@@ -163,6 +164,10 @@ async def api_post(item: LiteYItem, req: Request):
 
 @app.post("/api/litey/delete")
 async def api_delete(item: LiteYDeleteItem):
+    rand = randint(1, 100)
+    if rand is not 100:
+        return PlainTextResponse(f"{rand} は 100 ではありません。", 403)
+
     ctx["mongo_client"].litey.notes.delete_one({
         "id": item.id
     })
