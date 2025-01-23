@@ -165,7 +165,7 @@ async def api_post(item: LiteYItem, req: Request):
 @app.post("/api/litey/delete")
 async def api_delete(item: LiteYDeleteItem):
     rand = randint(1, 100)
-    if rand is not 100:
+    if rand != 100:
         return PlainTextResponse(f"{rand} は 100 ではありません。", 403)
 
     ctx["mongo_client"].litey.notes.delete_one({
