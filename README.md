@@ -20,6 +20,14 @@ docker run --detach \
   mongo
 ```
 
+```bash
+docker run --detach \
+  --name litey-redis-debug \
+  --volume litey-redis-debug:/data/db \
+  --publish 6379:6379 \
+  redis
+```
+
 サーバーを起動します
 
 ```bash

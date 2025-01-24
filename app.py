@@ -7,15 +7,17 @@ from urllib.parse import urlparse
 from base64 import b64encode
 from re import escape, compile, IGNORECASE
 from pprint import pprint
-from random import randint
 
 from requests import get
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, Response, status, Depends
 from fastapi.responses import JSONResponse, Response, PlainTextResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pymongo import MongoClient, DESCENDING
 from contextlib import asynccontextmanager
+from redis.asyncio import from_url
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
 # Jinja2
 
@@ -50,6 +52,17 @@ def is_over_n_hours(src: datetime, hours: int) -> bool:
 
 ctx = {}
 
+async def default_identifier(req: Request):
+    cloudflare_ip = req.headers.get("CF-Connecting-IP")
+    if cloudflare_ip:
+        return cloudflare_ip.split(",")[0]
+
+    forwarded = req.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0]
+
+    return req.client.host + ":" + req.scope["path"]
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ctx["templates"] = Jinja2Templates("templates")
@@ -71,10 +84,16 @@ async def lifespan(app: FastAPI):
     ctx["mongo_client"].litey.ngs.create_index("word", unique=True)
 
     pprint(ctx)
+
+    redis_uri = environ.get("REDIS_URI", "redis://127.0.0.1:6379/")
+    redis_connection = from_url(redis_uri, encoding="utf8")
+    await FastAPILimiter.init(redis_connection, identifier=default_identifier)
     yield
     ctx["mongo_client"].close()
 
     ctx.clear()
+
+    await FastAPILimiter.close()
 
 # スニペット
 
@@ -112,7 +131,7 @@ def fastapi_serve(dir: str, ref: str, indexes: List[str] = ["index.html", "index
     return FileResponse(path)
 
 def get_ip(req: Request) -> str:
-    return req.headers.get("CF-Connecting-IP") or req.client.host
+    return req.headers.get("CF-Connecting-IP") or req.headers.get("X-Forwarded-For") or req.client.host
 
 def get_litey_notes(id: str = None) -> List[dict]:
     if not id:
@@ -162,12 +181,8 @@ async def api_post(item: LiteYItem, req: Request):
 
     return PlainTextResponse("OK")
 
-@app.post("/api/litey/delete")
+@app.post("/api/litey/delete", dependencies=[Depends(RateLimiter(times=1, seconds=86400))])
 async def api_delete(item: LiteYDeleteItem):
-    rand = randint(1, 100)
-    if rand != 100:
-        return PlainTextResponse(f"{rand} は 100 ではありません。", 403)
-
     ctx["mongo_client"].litey.notes.delete_one({
         "id": item.id
     })
