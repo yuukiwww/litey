@@ -166,8 +166,8 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
 @app.get("/api/litey/get")
 async def api_get(id: str = None):
     res = JSONResponse(get_litey_notes(id))
-    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
-    res.headers["CDN-Cache-Control"] = f"max-age=15"
+    res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
+    res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
 @app.post("/api/litey/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
@@ -206,8 +206,8 @@ async def api_image_proxy(url: str):
 @app.get("/api/ng/get")
 async def api_ng_get():
     res = PlainTextResponse("\n".join(get_ng_words()))
-    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
-    res.headers["CDN-Cache-Control"] = f"max-age=15"
+    res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
+    res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
 @app.post("/api/ng/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
@@ -232,8 +232,8 @@ async def home(req: Request):
         "notes": get_litey_notes(),
         "ng_words": get_ng_words()
     })
-    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
-    res.headers["CDN-Cache-Control"] = f"max-age=15"
+    res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
+    res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
 @app.get("/{ref:path}")
