@@ -166,11 +166,11 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
 @app.get("/api/litey/get")
 async def api_get(id: str = None):
     res = JSONResponse(get_litey_notes(id))
-    res.headers["Cache-Control"] = f"public, max-age=0, s-maxage=0"
-    res.headers["CDN-Cache-Control"] = f"max-age=0"
+    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
+    res.headers["CDN-Cache-Control"] = f"max-age=15"
     return res
 
-@app.post("/api/litey/post")
+@app.post("/api/litey/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
 async def api_post(item: LiteYItem, req: Request):
     ctx["mongo_client"].litey.notes.insert_one({
         "id": str(uuid4()),
@@ -206,11 +206,11 @@ async def api_image_proxy(url: str):
 @app.get("/api/ng/get")
 async def api_ng_get():
     res = PlainTextResponse("\n".join(get_ng_words()))
-    res.headers["Cache-Control"] = f"public, max-age=0, s-maxage=0"
-    res.headers["CDN-Cache-Control"] = f"max-age=0"
+    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
+    res.headers["CDN-Cache-Control"] = f"max-age=15"
     return res
 
-@app.post("/api/ng/post")
+@app.post("/api/ng/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
 async def api_ng_post(item: NGItem):
     ctx["mongo_client"].litey.ngs.insert_one({
         "word": item.word
@@ -218,7 +218,7 @@ async def api_ng_post(item: NGItem):
 
     return PlainTextResponse("OK")
 
-@app.post("/api/ng/delete")
+@app.post("/api/ng/delete", dependencies=[Depends(RateLimiter(times=1, seconds=86400))])
 async def api_ng_delete(item: NGItem):
     ctx["mongo_client"].litey.ngs.delete_one({
         "word": item.word
@@ -232,8 +232,8 @@ async def home(req: Request):
         "notes": get_litey_notes(),
         "ng_words": get_ng_words()
     })
-    res.headers["Cache-Control"] = f"public, max-age=0, s-maxage=0"
-    res.headers["CDN-Cache-Control"] = f"max-age=0"
+    res.headers["Cache-Control"] = f"public, max-age=15, s-maxage=15"
+    res.headers["CDN-Cache-Control"] = f"max-age=15"
     return res
 
 @app.get("/{ref:path}")

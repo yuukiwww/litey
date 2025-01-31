@@ -15,7 +15,10 @@ function notePost() {
         msg.value = "";
         alert("投稿に成功しました！");
       } else {
-        alert("投稿に失敗しました。");
+        (async () => {
+          const text = await res.text();
+          alert(`投稿に失敗しました。\n${text}`);
+        })();
       }
     });
 }
