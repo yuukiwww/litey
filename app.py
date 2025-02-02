@@ -170,7 +170,7 @@ async def api_get(id: str = None):
     res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
-@app.post("/api/litey/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
+@app.post("/api/litey/post")
 async def api_post(item: LiteYItem, req: Request):
     ctx["mongo_client"].litey.notes.insert_one({
         "id": str(uuid4()),
@@ -210,7 +210,7 @@ async def api_ng_get():
     res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
-@app.post("/api/ng/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
+@app.post("/api/ng/post")
 async def api_ng_post(item: NGItem):
     ctx["mongo_client"].litey.ngs.insert_one({
         "word": item.word
