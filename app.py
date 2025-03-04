@@ -218,7 +218,7 @@ async def api_ng_post(item: NGItem):
 
     return PlainTextResponse("OK")
 
-@app.post("/api/ng/delete", dependencies=[Depends(RateLimiter(times=1, seconds=86400))]	)
+@app.post("/api/ng/delete", dependencies=[Depends(RateLimiter(times=1, seconds=86400))])
 async def api_ng_delete(item: NGItem):
     ctx["mongo_client"].litey.ngs.delete_one({
         "word": item.word
