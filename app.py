@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from base64 import b64encode
 from re import escape, compile, IGNORECASE
 from pprint import pprint
+from math import ceil
 
 from requests import get
 from fastapi import FastAPI, Request, Response, status, Depends
@@ -133,9 +134,12 @@ def fastapi_serve(dir: str, ref: str, indexes: List[str] = ["index.html", "index
 def get_ip(req: Request) -> str:
     return req.headers.get("CF-Connecting-IP") or req.headers.get("X-Forwarded-For") or req.client.host
 
-def get_litey_notes(id: str = None, limit: int = 0) -> List[dict]:
+def get_max_page() -> int:
+    return ceil(ctx["mongo_client"].litey.notes.count_documents({}) / 50)
+
+def get_litey_notes(id: str = None, page: int = 0) -> List[dict]:
     if not id:
-        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).limit(limit)
+        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).skip(page * 50).limit(50)
         return list(cursor)
 
     return ctx["mongo_client"].litey.notes.find_one({ "id": id }, { "_id": False })
@@ -164,8 +168,8 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
     return res
 
 @app.get("/api/litey/get")
-async def api_get(id: str = None, limit: int = 0):
-    res = JSONResponse(get_litey_notes(id, limit))
+async def api_get(id: str = None, page: int = 0):
+    res = JSONResponse(get_litey_notes(id, page))
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
@@ -227,10 +231,11 @@ async def api_ng_delete(item: NGItem):
     return PlainTextResponse("OK")
 
 @app.get("/")
-async def home(req: Request, limit: int = 50):
+async def home(req: Request, page: int = 0):
     res = ctx["templates"].TemplateResponse(req, "index.html", {
-        "notes": get_litey_notes(limit=limit),
-        "ng_words": get_ng_words()
+        "notes": get_litey_notes(page=page),
+        "ng_words": get_ng_words(),
+        "max_page": get_max_page()
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
