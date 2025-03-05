@@ -133,7 +133,7 @@ def fastapi_serve(dir: str, ref: str, indexes: List[str] = ["index.html", "index
 def get_ip(req: Request) -> str:
     return req.headers.get("CF-Connecting-IP") or req.headers.get("X-Forwarded-For") or req.client.host
 
-def get_litey_notes(id: str = None, limit: int = -1) -> List[dict]:
+def get_litey_notes(id: str = None, limit: int = 0) -> List[dict]:
     if not id:
         cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).limit(limit)
         return list(cursor)
@@ -164,7 +164,7 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
     return res
 
 @app.get("/api/litey/get")
-async def api_get(id: str = None, limit: int = -1):
+async def api_get(id: str = None, limit: int = 0):
     res = JSONResponse(get_litey_notes(id, limit))
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
