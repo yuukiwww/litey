@@ -227,9 +227,9 @@ async def api_ng_delete(item: NGItem):
     return PlainTextResponse("OK")
 
 @app.get("/")
-async def home(req: Request):
+async def home(req: Request, limit: int = 50):
     res = ctx["templates"].TemplateResponse(req, "index.html", {
-        "notes": get_litey_notes(limit=50),
+        "notes": get_litey_notes(limit=limit),
         "ng_words": get_ng_words()
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"

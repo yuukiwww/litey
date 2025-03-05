@@ -11,6 +11,7 @@
     <h1>掲示板へようこそ！</h1>
     <p>良識のあるメッセージを心がけてください</p>
     <p>荒らしが横行しているため、最初の50件のみ表示しています。</p>
+    <p>全て表示するには<a href="/?limit=0">こちら</a></p>
     <textarea placeholder="ここにメッセージを入力" rows="4" cols="50" id="message"></textarea>
     <input type="submit" value="今すぐ送信！" onclick="notePost();">
     {% for note in notes %}
