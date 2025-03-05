@@ -10,9 +10,11 @@
   <body>
     <h1>掲示板へようこそ！</h1>
     <p>良識のあるメッセージを心がけてください</p>
-    {% for i in range(max_page) %}
-      <a href="/?page={{ i }}">{{ i }}</a>
-    {% endfor %}
+    <p>
+      {% for i in range(max_page) %}
+        <a href="/?page={{ i }}">{{ i }}</a>
+      {% endfor %}
+    </p>
     <textarea placeholder="ここにメッセージを入力" rows="4" cols="50" id="message"></textarea>
     <input type="submit" value="今すぐ送信！" onclick="notePost();">
     {% for note in notes %}
