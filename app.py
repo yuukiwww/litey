@@ -133,9 +133,9 @@ def fastapi_serve(dir: str, ref: str, indexes: List[str] = ["index.html", "index
 def get_ip(req: Request) -> str:
     return req.headers.get("CF-Connecting-IP") or req.headers.get("X-Forwarded-For") or req.client.host
 
-def get_litey_notes(id: str = None) -> List[dict]:
+def get_litey_notes(id: str = None, limit: int = -1) -> List[dict]:
     if not id:
-        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING)
+        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).limit(limit)
         return list(cursor)
 
     return ctx["mongo_client"].litey.notes.find_one({ "id": id }, { "_id": False })
@@ -164,13 +164,13 @@ async def cors_handler(req: Request, call_next: Callable[[Request], Awaitable[Re
     return res
 
 @app.get("/api/litey/get")
-async def api_get(id: str = None):
-    res = JSONResponse(get_litey_notes(id))
+async def api_get(id: str = None, limit: int = -1):
+    res = JSONResponse(get_litey_notes(id, limit))
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
     res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
-@app.post("/api/litey/post", dependencies=[Depends(RateLimiter(times=4, seconds=3600))])
+@app.post("/api/litey/post")
 async def api_post(item: LiteYItem, req: Request):
     ctx["mongo_client"].litey.notes.insert_one({
         "id": str(uuid4()),
@@ -210,7 +210,7 @@ async def api_ng_get():
     res.headers["CDN-Cache-Control"] = f"max-age=60"
     return res
 
-@app.post("/api/ng/post", dependencies=[Depends(RateLimiter(times=1, seconds=86400))])
+@app.post("/api/ng/post")
 async def api_ng_post(item: NGItem):
     ctx["mongo_client"].litey.ngs.insert_one({
         "word": item.word
@@ -229,7 +229,7 @@ async def api_ng_delete(item: NGItem):
 @app.get("/")
 async def home(req: Request):
     res = ctx["templates"].TemplateResponse(req, "index.html", {
-        "notes": get_litey_notes(),
+        "notes": get_litey_notes(limit=50),
         "ng_words": get_ng_words()
     })
     res.headers["Cache-Control"] = f"public, max-age=60, s-maxage=60"
