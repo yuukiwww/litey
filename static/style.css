@@ -52,3 +52,7 @@ code {
 #note > :nth-child(n+4):nth-child(-n+4) {
   margin-right: 4px;
 }
+
+#page-list {
+  all: revert;
+}

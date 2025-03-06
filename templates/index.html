@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LiteY</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?a">
     <script src="script.js"></script>
   </head>
   <body>
     <h1>掲示板へようこそ！</h1>
     <p>良識のあるメッセージを心がけてください</p>
-    {% for i in range(max_page) %}
-      <a href="/?page={{ i }}">{{ i }}</a>
-    {% endfor %}
+    <details id="page-list">
+      <summary>ページ一覧</summary>
+      {% for i in range(max_page) %}
+        <a href="/?page={{ i }}">{{ i }}</a>
+      {% endfor %}
+    </details>
     <p></p>
     <textarea placeholder="ここにメッセージを入力" rows="4" cols="50" id="message"></textarea>
     <input type="submit" value="今すぐ送信！" onclick="notePost();">
