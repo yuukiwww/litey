@@ -84,6 +84,8 @@ async def lifespan(app: FastAPI):
     #ctx["mongo_client"].litey.notes.create_index("id", unique=True)
     ctx["mongo_client"].litey.ngs.create_index("word", unique=True)
 
+    ctx["page_size"] = 100
+
     pprint(ctx)
 
     redis_uri = environ.get("REDIS_URI", "redis://127.0.0.1:6379/")
@@ -135,11 +137,11 @@ def get_ip(req: Request) -> str:
     return req.headers.get("CF-Connecting-IP") or req.headers.get("X-Forwarded-For") or req.client.host
 
 def get_max_page() -> int:
-    return ceil(ctx["mongo_client"].litey.notes.count_documents({}) / 50)
+    return ceil(ctx["mongo_client"].litey.notes.count_documents({}) / ctx["page_size"])
 
 def get_litey_notes(id: str = None, page: int = 0) -> List[dict]:
     if not id:
-        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).skip(page * 50).limit(50)
+        cursor = ctx["mongo_client"].litey.notes.find({}, { "_id": False }).sort("date", DESCENDING).skip(page * ctx["page_size"]).limit(ctx["page_size"])
         return list(cursor)
 
     return ctx["mongo_client"].litey.notes.find_one({ "id": id }, { "_id": False })
